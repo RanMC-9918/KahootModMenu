@@ -1,0 +1,20 @@
+{
+  "name": "esfds",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@google/genai": "^1.50.1",
+    "kahoot.js": "^1.0.0",
+    "kahoot.js-latest": "^1.0.8",
+    "ws": "^8.20.0"
+  },
+  "keywords": []
+}

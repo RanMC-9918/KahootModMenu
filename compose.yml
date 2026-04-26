@@ -1,0 +1,8 @@
+services:
+  web:
+    build: .
+    ports:
+      - 8080:8080
+    environment:
+      - GEMINI_API_KEY=AIzaSyAs-g2tksrh0RZaC_RKVYlAC4I1b-1W2bQ
+    
