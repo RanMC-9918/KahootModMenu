@@ -10,7 +10,7 @@ rohanjain0725@gmail.com
 
 ##TODO
 
-- The AI answer finder only works for regular kahoot questions and not True or False, Slider or Written Answer.
+- The AI answer finder only works for regular kahoot questions (True False, Choose All That Apply, Order) not Slider or Written Answer.
 - Bots cannot bypass 2FA
 
 <img width="1206" height="597" alt="image" src="https://github.com/user-attachments/assets/71b5f3d1-e5ba-42bd-9fb0-596e1c2902a5" />
