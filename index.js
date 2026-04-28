@@ -45,20 +45,30 @@ wss.on('connection', function connection(ws) {
       }
 
       if(data.type === 'botAnswer'){
-        bots.forEach((bot, index) => {
+        bots.forEach(bot => {
           if (typeof bot.answer === 'function') {
-            const answerDelay = data.delay ? index * 150 : 0;
-            setTimeout(() => {
-              bot.answer(data.answer-1).then(() => {
-                ws.send(JSON.stringify({ type: 'botAnswered', username: bot.username }));
-              }).catch(e => console.error('Bot answer error:', e.message || e));
-            }, answerDelay);
+            bot.answer(data.answer-1).then(() => {
+              ws.send(JSON.stringify({ type: 'botAnswered', username: bot.username }));
+            }).catch(e => console.error('Bot answer error:', e.message || e));
           }
         });
       }
+
+      if(data.type === 'botAnswerOne'){
+        let bot = bots[data.index];
+        if (bot && typeof bot.answer === 'function') {
+          bot.answer(data.answer-1).then(() => {
+            ws.send(JSON.stringify({ type: 'botAnswered', username: bot.username }));
+          }).catch(e => console.error('Bot answer error:', e.message || e));
+        }
+      }
       
       if(data.type === 'deployBots'){
-        deployBots(ws, data.gamePin, data.username, data.numBots, data.delay);
+        deployBots(ws, data.gamePin, data.username, data.numBots);
+      }
+
+      if(data.type === 'joinBot'){
+        joinBot(ws, data.gamePin, data.username);
       }
     } catch (error) {
       console.error('Failed to parse incoming message:', error);
@@ -88,46 +98,24 @@ async function answerRegularQuestion(question, options){
 
 let bots = [];
 
-const scientists = [
-  'Albert Einstein', 'Isaac Newton', 'Marie Curie', 'Charles Darwin', 'Nikola Tesla',
-  'Galileo Galilei', 'Stephen Hawking', 'Richard Feynman', 'Max Planck', 'Niels Bohr',
-  'James Maxwell', 'Michael Faraday', 'Ernest Rutherford', 'Louis Pasteur', 'Ada Lovelace',
-  'Alan Turing', 'Carl Sagan', 'Neil deGrasse Tyson', 'Rosalind Franklin', 'Lise Meitner',
-  'James Watson', 'Francis Crick', 'Edwin Hubble', 'Werner Heisenberg', 'Erwin Schrodinger',
-  'Paul Dirac', 'Enrico Fermi', 'Robert Oppenheimer', 'Rachel Carson', 'Alexander Fleming'
-];
-
-const presidents = [
-  'George Washington', 'John Adams', 'Thomas Jefferson', 'James Madison', 'James Monroe',
-  'Andrew Jackson', 'Abraham Lincoln', 'Ulysses Grant', 'Theodore Roosevelt', 'Woodrow Wilson',
-  'Franklin Roosevelt', 'Harry Truman', 'Dwight Eisenhower', 'John Kennedy', 'Lyndon Johnson',
-  'Richard Nixon', 'Jimmy Carter', 'Ronald Reagan', 'George H.W. Bush', 'Bill Clinton',
-  'George W. Bush', 'Barack Obama', 'Donald Trump', 'Joe Biden', 'John Tyler',
-  'James Polk', 'Millard Fillmore', 'Grover Cleveland', 'William McKinley', 'Herbert Hoover'
-];
-
-function getBotUsername(username, index) {
-  if (username === '@scientists') {
-    return scientists[Math.floor(Math.random() * scientists.length)];
-  }
-  if (username === '@presidents') {
-    return presidents[Math.floor(Math.random() * presidents.length)];
-  }
-  return username + index;
-}
-
-async function deployBots(ws, gamePin, username, numBots, delay){
+async function deployBots(ws, gamePin, username, numBots){
   for (let i = 0; i < numBots; i++) {
-    if (delay && i > 0) {
-      await new Promise(resolve => setTimeout(resolve, 150));
-    }
     let bot = new Kahoot();
-    let botUsername = getBotUsername(username, i);
-    bot.join(gamePin, botUsername).then(() => {
-      ws.send(JSON.stringify({ type: 'botAdded', username: botUsername }));
+    bot.join(gamePin, username + i).then(() => {
+      ws.send(JSON.stringify({ type: 'botAdded', username: username + i }));
     }).catch(e => {
       console.error('Bot join error:', e.message || e);
     });
     bots.push(bot);
   }
+}
+
+function joinBot(ws, gamePin, username){
+  let bot = new Kahoot();
+  bot.join(gamePin, username).then(() => {
+    ws.send(JSON.stringify({ type: 'botAdded', username: username }));
+  }).catch(e => {
+    console.error('Bot join error:', e.message || e);
+  });
+  bots.push(bot);
 }

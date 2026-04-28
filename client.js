@@ -431,6 +431,36 @@ function autoAnswer(){
     }
 }
 
+const scientists = [
+  'Albert Einstein', 'Isaac Newton', 'Marie Curie', 'Charles Darwin', 'Nikola Tesla',
+  'Galileo Galilei', 'Stephen Hawking', 'Richard Feynman', 'Max Planck', 'Niels Bohr',
+  'James Maxwell', 'Michael Faraday', 'Ernest Rutherford', 'Louis Pasteur', 'Ada Lovelace',
+  'Alan Turing', 'Carl Sagan', 'Neil deGrasse Tyson', 'Rosalind Franklin', 'Lise Meitner',
+  'James Watson', 'Francis Crick', 'Edwin Hubble', 'Werner Heisenberg', 'Erwin Schrodinger',
+  'Paul Dirac', 'Enrico Fermi', 'Robert Oppenheimer', 'Rachel Carson', 'Alexander Fleming'
+];
+
+const presidents = [
+  'George Washington', 'John Adams', 'Thomas Jefferson', 'James Madison', 'James Monroe',
+  'Andrew Jackson', 'Abraham Lincoln', 'Ulysses Grant', 'Theodore Roosevelt', 'Woodrow Wilson',
+  'Franklin Roosevelt', 'Harry Truman', 'Dwight Eisenhower', 'John Kennedy', 'Lyndon Johnson',
+  'Richard Nixon', 'Jimmy Carter', 'Ronald Reagan', 'George H.W. Bush', 'Bill Clinton',
+  'George W. Bush', 'Barack Obama', 'Donald Trump', 'Joe Biden', 'John Tyler',
+  'James Polk', 'Millard Fillmore', 'Grover Cleveland', 'William McKinley', 'Herbert Hoover'
+];
+
+function getBotUsername(username, index) {
+  if (username === '@scientists') {
+    return scientists[Math.floor(Math.random() * scientists.length)];
+  }
+  if (username === '@presidents') {
+    return presidents[Math.floor(Math.random() * presidents.length)];
+  }
+  return username + index;
+}
+
+let deployedBotCount = 0;
+
 let botDelayEnabled = false;
 botDelayBtn.addEventListener('click', () => {
     botDelayEnabled = !botDelayEnabled;
@@ -445,26 +475,45 @@ botDelayBtn.addEventListener('click', () => {
 
 deployBots.addEventListener('click', () => {
     if (ws && ws.readyState === WebSocket.OPEN && gamePinInput.value && usernameInput.value) {
-        let numBots = prompt('Enter number of bots to deploy');
-        
-        ws.send(JSON.stringify({ type: 'deployBots', gamePin: gamePinInput.value, username: usernameInput.value, numBots: Math.max(0, parseInt(numBots)), delay: botDelayEnabled }));
+        let numBots = parseInt(prompt('Enter number of bots to deploy'));
+        if (isNaN(numBots) || numBots <= 0) return;
+        deployedBotCount += numBots;
+        for (let i = 0; i < numBots; i++) {
+            const username = getBotUsername(usernameInput.value, i);
+            const sendDelay = botDelayEnabled ? i * 150 : 0;
+            setTimeout(() => {
+                ws.send(JSON.stringify({ type: 'joinBot', gamePin: gamePinInput.value, username: username }));
+            }, sendDelay);
+        }
     } else {
         display.textContent = 'Error: Not connected to server';
     }
 });
 
+function sendBotAnswer(answer) {
+    if (botDelayEnabled) {
+        for (let i = 0; i < deployedBotCount; i++) {
+            setTimeout(() => {
+                ws.send(JSON.stringify({ type: 'botAnswerOne', answer: answer, index: i }));
+            }, i * 150);
+        }
+    } else {
+        ws.send(JSON.stringify({ type: 'botAnswer', answer: answer }));
+    }
+}
+
 botAnswerBtn1.addEventListener('click', () => {
-    ws.send(JSON.stringify({ type: 'botAnswer', answer: 1, delay: botDelayEnabled }));
+    sendBotAnswer(1);
 });
 
 botAnswerBtn2.addEventListener('click', () => {
-    ws.send(JSON.stringify({ type: 'botAnswer', answer: 2, delay: botDelayEnabled }));
+    sendBotAnswer(2);
 });
 
 botAnswerBtn3.addEventListener('click', () => {
-    ws.send(JSON.stringify({ type: 'botAnswer', answer: 3, delay: botDelayEnabled }));
+    sendBotAnswer(3);
 });
 
 botAnswerBtn4.addEventListener('click', () => {
-    ws.send(JSON.stringify({ type: 'botAnswer', answer: 4, delay: botDelayEnabled }));
+    sendBotAnswer(4);
 });
