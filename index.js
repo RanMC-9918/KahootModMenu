@@ -66,10 +66,6 @@ wss.on('connection', function connection(ws) {
       if(data.type === 'deployBots'){
         deployBots(ws, data.gamePin, data.username, data.numBots);
       }
-
-      if(data.type === 'joinBot'){
-        joinBot(ws, data.gamePin, data.username);
-      }
     } catch (error) {
       console.error('Failed to parse incoming message:', error);
     }
@@ -100,22 +96,13 @@ let bots = [];
 
 async function deployBots(ws, gamePin, username, numBots){
   for (let i = 0; i < numBots; i++) {
+    const botUsername = numBots === 1 ? username : username + i;
     let bot = new Kahoot();
-    bot.join(gamePin, username + i).then(() => {
-      ws.send(JSON.stringify({ type: 'botAdded', username: username + i }));
+    bot.join(gamePin, botUsername).then(() => {
+      ws.send(JSON.stringify({ type: 'botAdded', username: botUsername }));
     }).catch(e => {
       console.error('Bot join error:', e.message || e);
     });
     bots.push(bot);
   }
-}
-
-function joinBot(ws, gamePin, username){
-  let bot = new Kahoot();
-  bot.join(gamePin, username).then(() => {
-    ws.send(JSON.stringify({ type: 'botAdded', username: username }));
-  }).catch(e => {
-    console.error('Bot join error:', e.message || e);
-  });
-  bots.push(bot);
 }

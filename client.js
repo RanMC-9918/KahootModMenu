@@ -482,7 +482,7 @@ deployBots.addEventListener('click', () => {
             const username = getBotUsername(usernameInput.value, i);
             const sendDelay = botDelayEnabled ? i * 150 : 0;
             setTimeout(() => {
-                ws.send(JSON.stringify({ type: 'joinBot', gamePin: gamePinInput.value, username: username }));
+                ws.send(JSON.stringify({ type: 'deployBots', gamePin: gamePinInput.value, username: username, numBots: 1 }));
             }, sendDelay);
         }
     } else {
