@@ -217,6 +217,12 @@ deployBots.id = 'my-mod-menu-bot';
 deployBots.className = 'button';
 deployBots.textContent = 'Deploy Bots';
 
+const botDelayBtn = document.createElement('button');
+botDelayBtn.id = 'my-mod-menu-bot-delay';
+botDelayBtn.className = 'toggle';
+botDelayBtn.textContent = 'Bot Delay (OFF)';
+botDelayBtn.style.background = 'linear-gradient(135deg, #007bff, #0056b3)';
+
 const labelBot = document.createElement('label');
 labelBot.textContent = 'Bot Answer:';
 
@@ -256,6 +262,7 @@ content.appendChild(botDisplay);
 content.appendChild(gamePinInput);
 content.appendChild(usernameInput);
 content.appendChild(deployBots);
+content.appendChild(botDelayBtn);
 content.appendChild(labelBot);
 content.appendChild(botAnswerBtns);
 
@@ -424,28 +431,40 @@ function autoAnswer(){
     }
 }
 
+let botDelayEnabled = false;
+botDelayBtn.addEventListener('click', () => {
+    botDelayEnabled = !botDelayEnabled;
+    if (botDelayEnabled) {
+        botDelayBtn.textContent = 'Bot Delay (ON)';
+        botDelayBtn.style.background = 'linear-gradient(135deg, #28a745, #218838)';
+    } else {
+        botDelayBtn.textContent = 'Bot Delay (OFF)';
+        botDelayBtn.style.background = 'linear-gradient(135deg, #007bff, #0056b3)';
+    }
+});
+
 deployBots.addEventListener('click', () => {
     if (ws && ws.readyState === WebSocket.OPEN && gamePinInput.value && usernameInput.value) {
         let numBots = prompt('Enter number of bots to deploy');
         
-        ws.send(JSON.stringify({ type: 'deployBots', gamePin: gamePinInput.value, username: usernameInput.value, numBots: Math.max(0, parseInt(numBots))}));
+        ws.send(JSON.stringify({ type: 'deployBots', gamePin: gamePinInput.value, username: usernameInput.value, numBots: Math.max(0, parseInt(numBots)), delay: botDelayEnabled }));
     } else {
         display.textContent = 'Error: Not connected to server';
     }
 });
 
 botAnswerBtn1.addEventListener('click', () => {
-    ws.send(JSON.stringify({ type: 'botAnswer', answer: 1 }));
+    ws.send(JSON.stringify({ type: 'botAnswer', answer: 1, delay: botDelayEnabled }));
 });
 
 botAnswerBtn2.addEventListener('click', () => {
-    ws.send(JSON.stringify({ type: 'botAnswer', answer: 2 }));
+    ws.send(JSON.stringify({ type: 'botAnswer', answer: 2, delay: botDelayEnabled }));
 });
 
 botAnswerBtn3.addEventListener('click', () => {
-    ws.send(JSON.stringify({ type: 'botAnswer', answer: 3 }));
+    ws.send(JSON.stringify({ type: 'botAnswer', answer: 3, delay: botDelayEnabled }));
 });
 
 botAnswerBtn4.addEventListener('click', () => {
-    ws.send(JSON.stringify({ type: 'botAnswer', answer: 4 }));
+    ws.send(JSON.stringify({ type: 'botAnswer', answer: 4, delay: botDelayEnabled }));
 });
