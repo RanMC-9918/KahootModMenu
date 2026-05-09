@@ -1,5 +1,7 @@
 import { WebSocketServer } from 'ws';
 
+const BOTDELAY = 100;
+
 import Kahoot from 'kahoot.js-latest';
 
 const wss = new WebSocketServer({ port: 8080 });
@@ -47,10 +49,16 @@ wss.on('connection', function connection(ws) {
       if(data.type === 'botAnswer'){
         bots.forEach((bot, index) => {
           if (typeof bot.answer === 'function') {
-            const answerDelay = data.delay ? index * 150 : 0;
+            const answerDelay = data.delay ? BOTDELAY : 0;
+            
+            // Patch for kahoot.js-latest missing _timesync bug
+            if (!bot._timesync) {
+              bot._timesync = { l: 30 };
+            }
+            
             setTimeout(() => {
               bot.answer(data.answer-1).then(() => {
-                ws.send(JSON.stringify({ type: 'botAnswered', username: bot.username }));
+                ws.send(JSON.stringify({ type: 'botAnswered', username: bot.us }));
               }).catch(e => console.error('Bot answer error:', e.message || e));
             }, answerDelay);
           }
@@ -106,27 +114,41 @@ const presidents = [
   'James Polk', 'Millard Fillmore', 'Grover Cleveland', 'William McKinley', 'Herbert Hoover'
 ];
 
+const nameMap = new Map();
+
 function getBotUsername(username, index) {
+  let baseName;
   if (username === '@scientists') {
-    return scientists[Math.floor(Math.random() * scientists.length)];
+    baseName = scientists[Math.floor(Math.random() * scientists.length)];
+  } else if (username === '@presidents') {
+    baseName = presidents[Math.floor(Math.random() * presidents.length)];
+  } else {
+    baseName = username + index;
   }
-  if (username === '@presidents') {
-    return presidents[Math.floor(Math.random() * presidents.length)];
+
+  if (nameMap.has(baseName)) {
+    let count = nameMap.get(baseName);
+    let finalName = baseName + count;
+    nameMap.set(baseName, count + 1);
+    return finalName;
+  } else {
+    nameMap.set(baseName, 1);
+    return baseName;
   }
-  return username + index;
 }
 
 async function deployBots(ws, gamePin, username, numBots, delay){
   for (let i = 0; i < numBots; i++) {
     if (delay && i > 0) {
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, BOTDELAY));
     }
     let bot = new Kahoot();
     let botUsername = getBotUsername(username, i);
+    bot.us = botUsername;
     bot.join(gamePin, botUsername).then(() => {
       ws.send(JSON.stringify({ type: 'botAdded', username: botUsername }));
     }).catch(e => {
-      console.error('Bot join error:', e.message || e);
+      console.error('Bot join error:', botUsername+"\n"+e.message || e);
     });
     bots.push(bot);
   }

@@ -1,4 +1,4 @@
-const api = "ws://localhost:8080/";
+const api = "ws://localhost:3000/";
 
 // Inject CSS for the mod menu
 const style = document.createElement('style');
